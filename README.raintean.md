@@ -1,8 +1,8 @@
-# blink的修改版
+# blink
 使用html来编写golang的GUI程序(only windows), 基于[miniblink开源库](https://github.com/weolar/miniblink49)  
 
-## 原项目地址
-[项目地址](https://github.com/raintean/blink)
+## Demo
+[Demo项目地址](https://github.com/raintean/blink-demo)
 
 ## 特性
 ---
@@ -21,7 +21,7 @@
 
 ## 安装
 ```bash
-go get github.com/topxeq/blink
+go get github.com/raintean/blink
 ```
 
 ## 示例
@@ -29,7 +29,7 @@ go get github.com/topxeq/blink
 package main
 
 import (
-	"github.com/topxeq/blink"
+	"github.com/raintean/blink"
 	"github.com/elazarl/go-bindata-assetfs"
 	"log"
 )
