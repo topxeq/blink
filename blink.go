@@ -11,44 +11,52 @@ import (
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/lxn/win"
-	"github.com/raintean/blink/internal/devtools"
-	"github.com/raintean/blink/internal/dll"
+	"github.com/topxeq/blink/internal/devtools"
+	"github.com/topxeq/blink/internal/dll"
 )
 
 //任务队列,保证所有的API调用都在痛一个线程
 var jobQueue = make(chan func())
+
+func ifFileExists(fileNameA string) bool {
+	_, err := os.Stat(fileNameA)
+	return err == nil || os.IsExist(err)
+}
 
 //初始化blink,释放并加载dll,启动调用队列
 func InitBlink() error {
 	//定义dll的路径
 	dllPath := filepath.Join(TempPath, "blink_"+runtime.GOARCH+".dll")
 
-	//准备释放dll到临时目录
-	err := os.MkdirAll(TempPath, 0644)
-	if err != nil {
-		return fmt.Errorf("无法创建临时目录：%s, err: %s", TempPath, err)
-	}
-	data, err := dll.Asset("blink.dll")
-	if err != nil {
-		return fmt.Errorf("找不到内嵌dll,err: %s", err)
-	}
-	err = func() error {
-		file, err := os.Create(dllPath)
-		defer file.Close()
+	if !ifFileExists(dllPath) {
+		//准备释放dll到临时目录
+		err := os.MkdirAll(TempPath, 0644)
 		if err != nil {
-			return fmt.Errorf("无法创建dll文件,err: %s", err)
+			return fmt.Errorf("无法创建临时目录：%s, err: %s", TempPath, err)
 		}
-		n, err := file.Write(data)
+		data, err := dll.Asset("blink.dll")
 		if err != nil {
-			return fmt.Errorf("无法写入dll文件,err: %s", err)
+			return fmt.Errorf("找不到内嵌dll,err: %s", err)
 		}
-		if len(data) != n {
-			return fmt.Errorf("写入校验失败")
+		err = func() error {
+			file, err := os.Create(dllPath)
+			defer file.Close()
+			if err != nil {
+				return fmt.Errorf("无法创建dll文件,err: %s", err)
+			}
+			n, err := file.Write(data)
+			if err != nil {
+				return fmt.Errorf("无法写入dll文件,err: %s", err)
+			}
+			if len(data) != n {
+				return fmt.Errorf("写入校验失败")
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
 		}
-		return nil
-	}()
-	if err != nil {
-		return err
+
 	}
 
 	//启动一个新的协程来处理blink的API调用
